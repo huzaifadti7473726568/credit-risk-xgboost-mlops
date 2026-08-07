@@ -1,0 +1,74 @@
+application_train:
+  path: data/application_train.csv
+  row_count_min: 300000
+  row_count_max: 350000
+  columns:
+    SK_ID_CURR:
+      type: integer
+      nullable: false
+      unique: true
+    TARGET:
+      type: integer
+      nullable: false
+      allowed_values: [0,1]
+    NAME_CONTRACT_TYPE:
+      type: string
+      nullable: false
+      allowed_values: ["Cash loans","Revolving loans"]
+    AMT_INCOME_TOTAL:
+      type: float
+      nullable: false
+      min: 0
+      max: 10000000
+      mostly: 0.999
+    DAYS_BIRTH:
+      type: integer
+      nullable: false
+      min: -29200
+      max: -6570
+
+    DAYS_EMPLOYED:
+      type: integer
+      nullable: true
+      min: -50000
+      max: 0
+      sentinel_values: [365243]
+
+bureau:
+  path: data/bureau.csv
+  row_count_min: 1500000
+  row_count_max: 2000000
+  columns:
+    SK_ID_CURR:
+      type: integer
+      nullable: false
+    AMT_CREDIT_SUM:
+      type: float
+      nullable: true
+      min: 0
+      max: 10000000
+      mostly: 0.998
+    DAYS_CREDIT:
+      type: integer
+      nullable: true
+      min: -50000
+      max: 0
+
+previous_application:
+  path: data/previous_application.csv
+  row_count_min: 1500000
+  row_count_max: 2000000
+  columns:
+    SK_ID_CURR:
+      type: integer
+      nullable: false
+    AMT_CREDIT:
+      type: float
+      nullable: true
+      min: 0
+      max: 10000000
+    DAYS_DECISION:
+      type: integer
+      nullable: true
+      min: -50000
+      max: 0      
