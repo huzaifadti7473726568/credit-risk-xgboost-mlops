@@ -216,3 +216,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Data files (NEVER COMMIT THESE)
+*.csv
+*.zip
+*.parquet
+data/
+!data/contract.yaml  # Except the contract
+
+# Processed data
+data/processed/
+
+# MLflow artifacts
+mlruns/
