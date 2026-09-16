@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -68,13 +68,13 @@ class WeightOfEvidenceEncoder(BaseEstimator, TransformerMixin):
         self.fit(X,y)
         X = X.copy()
 
-        kf = KFold(n_splits=self.n_folds, random_state=42, shuffle=True)
+        kf = StratifiedKFold(n_splits=self.n_folds, random_state=42, shuffle=True)
         encoded_col = {}
 
         for col in self.columns:
             col_oof = np.zeros(X.shape[0])
 
-            for train_idx, val_idx in kf.split(X):
+            for train_idx, val_idx in kf.split(X, y):
                 X_train_fold = X.iloc[train_idx]
                 y_train_fold = y.iloc[train_idx]
 
@@ -116,7 +116,7 @@ class WeightOfEvidenceEncoder(BaseEstimator, TransformerMixin):
         base = list(input_features) if input_features is not None else self.columns
         return np.array(base + [f"{col}_woe" for col in self.columns])
 
-class KfoldTargetEncoder(BaseEstimator, TransformerMixin):
+class KFoldTargetEncoder(BaseEstimator, TransformerMixin):
     """Target ENcoder with K-Fold cross validation to prevent data leakage.
     fit_transform(X,y): Use on training data only.
     - Compute leak-free out-of-fold encoding for training row (each row is encoded using 
@@ -153,13 +153,13 @@ class KfoldTargetEncoder(BaseEstimator, TransformerMixin):
         self.fit(X, y)
         X = X.copy()
 
-        kf = KFold(n_splits=self.n_folds, shuffle=True,random_state=42)
+        kf = StratifiedKFold(n_splits=self.n_folds, shuffle=True,random_state=42)
         encoded_col = {}
 
         for col in self.columns:
             col_oof = np.zeros(X.shape[0])
 
-            for train_idx, val_idx in kf.split(X):
+            for train_idx, val_idx in kf.split(X, y):
                 X_train_fold = X.iloc[train_idx]
                 y_train_fold = y.iloc[train_idx]
                 fold_global_mean = y_train_fold.mean()
@@ -205,6 +205,7 @@ class MissingIndicator(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         self.fitted_ = True
+        self.feature_names_in_ = list(X.columns)
         return self
     
     def transform(self, X):
@@ -219,7 +220,7 @@ class MissingIndicator(BaseEstimator, TransformerMixin):
         return X
 
     def get_feature_names_out(self, input_features=None):
-        base = list(input_features) if input_features is not None else self.columns
+        base = list(input_features) if input_features is not None else self.feature_names_in_
         return np.array(base + [f"{col}_is_missing" for col in self.columns])
 
 class OutlierCapper(BaseEstimator, TransformerMixin):
@@ -251,6 +252,24 @@ class OutlierCapper(BaseEstimator, TransformerMixin):
     def get_feature_names_out(self, input_features=None):
         base = list(input_features) if input_features is not None else self.columns
         return np.array(base)
+
+class DropColumns(BaseEstimator, TransformerMixin):
+    """ Drops named columns from a dataframe. """
+    def __init__(self, columns=None):
+        self.columns=columns
+
+    def fit(self, X, y=None):
+        self.fitted_=True
+        return self
+    
+    def transform(self, X):
+        check_is_fitted(self, "fitted_")
+        return X.drop(columns=self.columns, errors='ignore')
+    
+    def get_feature_names_out(self, input_features=None):
+        if input_features is None:
+            return np.array([])
+        return np.array([c for c in input_features if c not in self.columns])
             
 
 
